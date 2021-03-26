@@ -20,27 +20,6 @@ public struct iPhoneNumberField: UIViewRepresentable {
     /// This variable writes to the binding provided in the initializer.
     @Binding public var text: String
     @State private var displayedText: String
-    
-    /// Whether or not the phone number field is editing.
-    /// This variable is `nil` unless the user passes in an `isEditing` binding.
-    private var externalIsFirstResponder: Binding<Bool>?
-
-    /// Whether or not the phone number field is editing.
-    /// This variable is used only if an `isEditing` binding was not provided in the initializer.
-    @State private var internalIsFirstResponder: Bool = false
-
-    /// Whether or not the phone number field is editing. 💬
-    /// This variable uses `externalIsFirstResponder` binding variable if an `isEditing` binding was provided in the initializer, otherwise it uses the `internalIsFirstResponder` state variable.
-    private var isFirstResponder: Bool {
-        get { externalIsFirstResponder?.wrappedValue ?? internalIsFirstResponder }
-        set {
-            if externalIsFirstResponder != nil {
-                externalIsFirstResponder!.wrappedValue = newValue
-            } else {
-                internalIsFirstResponder = newValue
-            }
-        }
-    }
 
     /// The maximum number of digits the phone number field allows. 🔢
     internal var maxDigits: Int?
@@ -134,12 +113,10 @@ public struct iPhoneNumberField: UIViewRepresentable {
 
     public init(_ title: String? = nil,
                 text: Binding<String>,
-                isEditing: Binding<Bool>? = nil,
                 formatted: Bool = true,
                 configuration: @escaping (UIViewType) -> () = { _ in } ) {
 
         self.placeholder = title
-        self.externalIsFirstResponder = isEditing
         self.formatted = formatted
         self._text = text
         self._displayedText = State(initialValue: text.wrappedValue)
@@ -191,19 +168,12 @@ public struct iPhoneNumberField: UIViewRepresentable {
         if let textAlignment = textAlignment {
             uiView.textAlignment = textAlignment
         }
-
-        if isFirstResponder {
-            uiView.becomeFirstResponder()
-        } else {
-            uiView.resignFirstResponder()
-        }
     }
 
     public func makeCoordinator() -> Coordinator {
         Coordinator(
             text: $text,
                     displayedText: $displayedText,
-                    isFirstResponder: externalIsFirstResponder ?? $internalIsFirstResponder,
                     formatted: formatted,
                     onBeginEditing: onBeginEditingHandler,
                     onEditingChange: onEditingChangeHandler,
@@ -217,7 +187,6 @@ public struct iPhoneNumberField: UIViewRepresentable {
         internal init(
             text: Binding<String>,
             displayedText: Binding<String>,
-            isFirstResponder: Binding<Bool>,
             formatted: Bool,
             onBeginEditing: @escaping (PhoneNumberTextField) -> () = { (view: PhoneNumberTextField) in },
             onEditingChange: @escaping (PhoneNumberTextField) -> () = { (view: PhoneNumberTextField) in },
@@ -228,7 +197,6 @@ public struct iPhoneNumberField: UIViewRepresentable {
         {
             self.text = text
             self.displayedText = displayedText
-            self.isFirstResponder = isFirstResponder
             self.formatted = formatted
             self.onBeginEditing = onBeginEditing
             self.onEditingChange = onEditingChange
@@ -240,7 +208,6 @@ public struct iPhoneNumberField: UIViewRepresentable {
 
         var text: Binding<String>
         var displayedText: Binding<String>
-        var isFirstResponder: Binding<Bool>
         var formatted: Bool
 
         var onBeginEditing = { (view: PhoneNumberTextField) in }
@@ -277,16 +244,10 @@ public struct iPhoneNumberField: UIViewRepresentable {
         }
 
         public func textFieldDidBeginEditing(_ textField: UITextField) {
-			DispatchQueue.main.async {
-				self.isFirstResponder.wrappedValue = true
-			}
             onBeginEditing(textField as! PhoneNumberTextField)
         }
 
         public func textFieldDidEndEditing(_ textField: UITextField) {
-			DispatchQueue.main.async {
-				self.isFirstResponder.wrappedValue = false
-			}
             onEndEditing(textField as! PhoneNumberTextField)
         }
         
