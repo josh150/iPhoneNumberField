@@ -132,6 +132,8 @@ public struct iPhoneNumberField: UIViewRepresentable {
                          for: .editingChanged)
         uiView.delegate = context.coordinator
         uiView.withExamplePlaceholder = placeholder == nil
+		uiView.textContentType = .telephoneNumber
+		
         if let defaultRegion = defaultRegion {
             uiView.partialFormatter.defaultRegion = defaultRegion
         }
@@ -141,7 +143,7 @@ public struct iPhoneNumberField: UIViewRepresentable {
 
     public func updateUIView(_ uiView: PhoneNumberTextField, context: UIViewRepresentableContext<Self>) {
         configuration(uiView)
-        
+
         uiView.text = displayedText
         uiView.font = font
         uiView.maxDigits = maxDigits
