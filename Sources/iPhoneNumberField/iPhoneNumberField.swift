@@ -131,6 +131,14 @@ public struct iPhoneNumberField: UIViewRepresentable {
                          action: #selector(Coordinator.textViewDidChange),
                          for: .editingChanged)
         uiView.delegate = context.coordinator
+
+		NotificationCenter.default.addObserver(
+			context.coordinator,
+			selector: #selector(context.coordinator.textDidChangeNotification),
+			name: UITextField.textDidChangeNotification,
+			object: uiView
+		)
+
         uiView.withExamplePlaceholder = placeholder == nil
 		uiView.textContentType = .telephoneNumber
 		
@@ -175,14 +183,15 @@ public struct iPhoneNumberField: UIViewRepresentable {
     public func makeCoordinator() -> Coordinator {
         Coordinator(
             text: $text,
-                    displayedText: $displayedText,
-                    formatted: formatted,
-                    onBeginEditing: onBeginEditingHandler,
-                    onEditingChange: onEditingChangeHandler,
-                    onPhoneNumberChange: onPhoneNumberChangeHandler,
-                    onEndEditing: onEndEditingHandler,
-                    onClear: onClearHandler,
-                    onReturn: onReturnHandler)
+			displayedText: $displayedText,
+			formatted: formatted,
+			onBeginEditing: onBeginEditingHandler,
+			onEditingChange: onEditingChangeHandler,
+			onPhoneNumberChange: onPhoneNumberChangeHandler,
+			onEndEditing: onEndEditingHandler,
+			onClear: onClearHandler,
+			onReturn: onReturnHandler
+		)
     }
 
     public class Coordinator: NSObject, UITextFieldDelegate {
@@ -218,6 +227,12 @@ public struct iPhoneNumberField: UIViewRepresentable {
         var onEndEditing = { (view: PhoneNumberTextField) in }
         var onClear = { (view: PhoneNumberTextField) in }
         var onReturn = { (view: PhoneNumberTextField) in }
+
+		// listen for changes from country selector
+		@objc func textDidChangeNotification(notification: Notification) {
+			guard let textField = notification.object as? PhoneNumberTextField else { return }
+			textViewDidChange(textField)
+		}
 
         @objc public func textViewDidChange(_ textField: UITextField) {
             guard let textField = textField as? PhoneNumberTextField else {
