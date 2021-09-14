@@ -230,8 +230,14 @@ public struct iPhoneNumberField: UIViewRepresentable {
 
 		// listen for changes from country selector
 		@objc func textDidChangeNotification(notification: Notification) {
-			guard let textField = notification.object as? PhoneNumberTextField else { return }
-			textViewDidChange(textField)
+			guard
+				let textField = notification.object as? PhoneNumberTextField,
+				displayedText.wrappedValue != textField.text
+			else { return }
+
+			DispatchQueue.main.async {
+				self.textViewDidChange(textField)
+			}
 		}
 
         @objc public func textViewDidChange(_ textField: UITextField) {
